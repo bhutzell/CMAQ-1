@@ -296,9 +296,13 @@ c++++++++++++++++++++++++Debug section++++++++++++++++++++++++++++++++++
 
 !            IF( NBKUPS .LE. MXBKUPS ) THEN
             IF ( DTC .GT. DTMIN ) THEN
-! reset YC and cut sub time-step in half
+! reset YC and cut sub time-step in half  
                IF ( MXFL ) THEN
-                  WRITE( LOGDEV, 92010 ) C, R, L, TRIM( CHEMISTRY_SPC( S ) ), NBKUPS
+                  WRITE( LOGDEV, 92008 ) NBKUPS
+                  WRITE( LOGDEV, 92009 ) C, R, L
+                  DO S = 1, N_SPEC
+                     IF( LEBISPFL( S ) )WRITE( LOGDEV, 92010 )TRIM( CHEMISTRY_SPC( S ) )
+                  END DO 
                ELSE
                   WRITE( LOGDEV, 92000 ) C, R, L, NBKUPS
                END IF
@@ -308,11 +312,11 @@ c++++++++++++++++++++++++Debug section++++++++++++++++++++++++++++++++++
                DTC = 0.5D0 * DTC
 
                N_INR_STEPS = 2 ** NBKUPS
-
+               
                EXIT SUBSTEP_EBI
 
             ELSE
-
+         
                WRITE( LOGDEV, 92040 ) C, R, L
 
                WRITE( LOGDEV, 92060 )
@@ -327,18 +331,18 @@ c++++++++++++++++++++++++Debug section++++++++++++++++++++++++++++++++++
 
          END DO SUBSTEP_EBI
 
-         IF( LEBI_CONV )THEN
+         IF( LEBI_CONV )THEN 
              NEBI        = 1 + NEBI
 ! test for completing final EBI time-step
              IF( NEBI .GT. N_EBI_STEPS )RETURN
 ! test whether backups were done
-             IF( NBKUPS .EQ. 0 )CYCLE TSTEP_EBI
+             IF( NBKUPS .EQ. 0 )CYCLE TSTEP_EBI 
 ! Reset NBKUPS, N_INR_STEPS and sub-time step
              NBKUPS      = 0
              N_INR_STEPS = 1
              DTC         = EBI_TMSTEP
          END IF
-
+         
       END DO TSTEP_EBI
 
       RETURN
@@ -346,16 +350,17 @@ c++++++++++++++++++++++++Debug section++++++++++++++++++++++++++++++++++
 
 92000 FORMAT( 'WARNING: EBI Euler convergence failure' /
      &        '         Reducing EBI time step because of ',
-     &         'convergence failure for ' /
+     &        '         convergence failure in ' /
      &        '         Cell (', I3, ', ', I3, ', ', I3, ')' ,
-     &        '  Back-up number', I2 )
+     &        '         Solution Attempt #', I2 )
 
-92010 FORMAT( 'WARNING: EBI Euler convergence failure' /
+92008 FORMAT( 'WARNING: At solution attempt #', I2  )
+92009 FORMAT( 'WARNING: EBI Euler convergence failure' /
      &        '         Reducing EBI time step because of ',
-     &         'MAXPRED convergence failure for ' /
+     &        '         MAXPRED failure in ' /
      &        '         Cell (', I3, ', ', I3, ', ', I3, ')' ,
-     &        ' and species ', A,
-     &        '  Back-up number', I2 )
+     &        '         for the below species: ')
+92010 FORMAT( A16 )
 
 92040 FORMAT( 'ERROR: Max number of EBI time step reductions exceeded'
      &      / '      Convergence failure for cell (', I3, ', ', I3,
